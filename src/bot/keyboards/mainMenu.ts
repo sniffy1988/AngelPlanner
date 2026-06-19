@@ -8,7 +8,11 @@ export function mainMenuKeyboard(locale: Locale, isAdmin: boolean) {
     [t('menu.rewards', locale), t('menu.achievements', locale)],
     [t('menu.language', locale)],
   ];
-  if (isAdmin) rows.push([t('menu.admin', locale)]);
+  if (isAdmin) {
+    rows.push([t('menu.admin', locale)]);
+  } else {
+    rows.push([t('menu.family', locale)]);
+  }
   return Markup.keyboard(rows).resize().persistent();
 }
 

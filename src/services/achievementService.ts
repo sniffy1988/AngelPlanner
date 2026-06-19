@@ -89,5 +89,5 @@ export async function notifyPetLevel(
 ) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return;
-  await petLevelUp(bot, user.name ?? 'Child', level);
+  await petLevelUp(bot, userId, user.name ?? 'Child', level);
 }

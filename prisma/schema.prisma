@@ -23,7 +23,20 @@ model User {
   pet                   Pet?
   achievements          UserAchievement[]
   pointTransactions     PointTransaction[]
+  parentOf              ParentChild[]       @relation("ParentRelations")
+  childOf               ParentChild[]       @relation("ChildRelations")
   createdAt             DateTime            @default(now())
+}
+
+model ParentChild {
+  id        Int      @id @default(autoincrement())
+  parentId  Int
+  parent    User     @relation("ParentRelations", fields: [parentId], references: [id], onDelete: Cascade)
+  childId   Int
+  child     User     @relation("ChildRelations", fields: [childId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([parentId, childId])
 }
 
 enum Role {

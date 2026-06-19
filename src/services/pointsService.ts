@@ -64,9 +64,9 @@ export async function completeTask(
   const petResult = await petService.onTaskComplete(userId, task.points);
 
   if (earnsPoints) {
-    await adminNotify.taskCompleted(bot, user.name ?? 'Child', task.title, task.points);
+    await adminNotify.taskCompleted(bot, userId, user.name ?? 'Child', task.title, task.points);
   } else {
-    await adminNotify.childTaskCompleted(bot, user.name ?? 'Child', task.title);
+    await adminNotify.childTaskCompleted(bot, userId, user.name ?? 'Child', task.title);
   }
 
   if (petResult.levelUp) {
@@ -112,7 +112,7 @@ export async function redeemReward(
     }),
   ]);
 
-  await adminNotify.rewardRedeemed(bot, user.name ?? 'Child', reward.title, reward.cost);
+  await adminNotify.rewardRedeemed(bot, userId, user.name ?? 'Child', reward.title, reward.cost);
 
   const updated = await prisma.user.findUnique({
     where: { id: userId },

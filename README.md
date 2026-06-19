@@ -49,6 +49,10 @@ npm run studio
 
 5. Open http://localhost:6666 → set parent's `User.role` to `ADMIN`.
 
+6. В боте: `⚙️ Адмін` → `👨‍👧 Мої діти` → **Прив'язати дитину** (выбрать Ангелину).
+
+7. Теперь родитель может добавлять задачи только своим привязанным детям.
+
 6. Send `/start` again → `⚙️ Админ` → create tasks and rewards.
 
 ## Environment
@@ -120,6 +124,7 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
 1. Откройте http://`<IP-сервера>`:6666
 2. Таблица `User` → у родителя `role` = `ADMIN`
+3. Таблица `ParentChild` — можно привязать родителя к ребёнку вручную (`parentId` + `childId`), или через бот: `⚙️ Адмін` → `👨‍👧 Мої діти`
 3. В Telegram снова `/start`
 
 ### 5. Обновление
@@ -132,6 +137,13 @@ Portainer → Stack `angelplanner` → **Pull and redeploy**
 - Не удаляйте volume `angelplanner-data` — там SQLite с пользователями и задачами
 - `BOT_TOKEN` храните только в Environment variables Portainer, не в git
 - Часовой пояс уже задан: `Europe/Kyiv`
+
+## Parent–child links
+
+- Родитель (`role=ADMIN`) привязывает детей в боте: `⚙️ Адмін` → `👨‍👧 Мої діти` → `➕ Прив'язати дитину`
+- У ребёнка в меню `👨‍👩‍👧 Родичі` — список привязанных родителей
+- Родитель видит задачи, поинты и уведомления **только своих** детей
+- Таблица `ParentChild` в Prisma Studio для ручного редактирования связей
 
 ## Admin access
 

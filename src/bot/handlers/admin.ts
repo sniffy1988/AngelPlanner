@@ -1,12 +1,25 @@
 import type { Telegraf } from 'telegraf';
 import type { RecurrenceType } from '@prisma/client';
 import { menuLabels, t } from '../../i18n';
-import { listChildren } from '../../services/userService';
+import {
+  isParentOf,
+  linkParentChild,
+  listChildrenForParent,
+  listUnlinkedChildrenForParent,
+  unlinkParentChild,
+} from '../../services/relationService';
 import * as taskService from '../../services/taskService';
 import * as rewardService from '../../services/rewardService';
 import * as pointsService from '../../services/pointsService';
 import { adminMenuKeyboard } from '../keyboards/adminMenu';
-import { childrenFilterKeyboard, taskAdminActions, confirmDelete } from '../keyboards/taskList';
+import {
+  childrenFilterKeyboard,
+  confirmDelete,
+  confirmUnlink,
+  linkChildKeyboard,
+  myChildrenKeyboard,
+  taskAdminActions,
+} from '../keyboards/taskList';
 import {
   pointsKeyboard,
   childrenKeyboard,
@@ -37,10 +50,35 @@ function wiz(ctx: BotContext): WizardState {
   return ctx.session.wizard as WizardState;
 }
 
+function parentId(ctx: BotContext): number {
+  return ctx.state.user!.id;
+}
+
+async function myChildren(ctx: BotContext) {
+  return listChildrenForParent(parentId(ctx));
+}
+
+async function ensureParentOf(ctx: BotContext, childId: number): Promise<boolean> {
+  const ok = await isParentOf(parentId(ctx), childId);
+  if (!ok) {
+    await ctx.answerCbQuery(t('admin.not_your_child', ctx.state.user!.locale));
+  }
+  return ok;
+}
+
+async function ensureParentOfTask(ctx: BotContext, taskId: number): Promise<boolean> {
+  const task = await taskService.getTask(taskId);
+  if (!task) {
+    await ctx.answerCbQuery('—');
+    return false;
+  }
+  return ensureParentOf(ctx, task.assigneeId);
+}
+
 async function preview(ctx: BotContext) {
   const w = wiz(ctx);
   const locale = ctx.state.user!.locale;
-  const child = (await listChildren()).find((c) => c.id === w.assigneeId);
+  const child = (await myChildren(ctx)).find((c) => c.id === w.assigneeId);
   const type =
     w.recurrence === 'NONE'
       ? t('wizard.recur.none', locale)
@@ -68,6 +106,18 @@ async function preview(ctx: BotContext) {
   });
 }
 
+async function promptLinkChildren(ctx: BotContext) {
+  const locale = ctx.state.user!.locale;
+  await ctx.reply(t('admin.no_linked_children', locale), {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: t('admin.link_child_btn', locale), callback_data: 'admin:link_child' }],
+        [{ text: t('menu.main', locale), callback_data: 'nav:main' }],
+      ],
+    },
+  });
+}
+
 export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   bot.hears(menuLabels('menu.admin'), async (ctx) => {
     const user = ctx.state.user;
@@ -78,8 +128,72 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
     await ctx.reply(t('admin.title', user.locale), adminMenuKeyboard(user.locale));
   });
 
+  bot.action('admin:children', async (ctx) => {
+    if (ctx.state.user?.role !== 'ADMIN') return;
+    await ctx.answerCbQuery();
+    const children = await myChildren(ctx);
+    const locale = ctx.state.user.locale;
+    if (!children.length) {
+      await ctx.reply(t('admin.children_empty', locale), linkChildKeyboard([], locale));
+      return;
+    }
+    await ctx.reply(t('admin.children_title', locale), myChildrenKeyboard(children, locale));
+  });
+
+  bot.action('admin:link_child', async (ctx) => {
+    if (ctx.state.user?.role !== 'ADMIN') return;
+    await ctx.answerCbQuery();
+    const unlinked = await listUnlinkedChildrenForParent(parentId(ctx));
+    await ctx.reply(
+      t('admin.link_child_prompt', ctx.state.user.locale),
+      linkChildKeyboard(unlinked, ctx.state.user.locale)
+    );
+  });
+
+  bot.action(/^admin:link_child:(\d+)$/, async (ctx) => {
+    if (ctx.state.user?.role !== 'ADMIN') return;
+    const childId = Number(ctx.match[1]);
+    const locale = ctx.state.user.locale;
+    try {
+      await linkParentChild(parentId(ctx), childId);
+      const children = await myChildren(ctx);
+      await ctx.answerCbQuery(t('admin.child_linked', locale));
+      await ctx.reply(t('admin.children_title', locale), myChildrenKeyboard(children, locale));
+    } catch {
+      await ctx.answerCbQuery(t('error.generic', locale));
+    }
+  });
+
+  bot.action(/^admin:unlink_child:(\d+)$/, async (ctx) => {
+    if (ctx.state.user?.role !== 'ADMIN') return;
+    const childId = Number(ctx.match[1]);
+    if (!(await ensureParentOf(ctx, childId))) return;
+    await ctx.answerCbQuery();
+    await ctx.editMessageReplyMarkup(confirmUnlink(childId, ctx.state.user.locale).reply_markup);
+  });
+
+  bot.action(/^admin:unlink_yes:(\d+)$/, async (ctx) => {
+    if (ctx.state.user?.role !== 'ADMIN') return;
+    const childId = Number(ctx.match[1]);
+    if (!(await ensureParentOf(ctx, childId))) return;
+    await unlinkParentChild(parentId(ctx), childId);
+    const locale = ctx.state.user.locale;
+    await ctx.answerCbQuery(t('admin.child_unlinked', locale));
+    const children = await myChildren(ctx);
+    await ctx.reply(
+      children.length ? t('admin.children_title', locale) : t('admin.children_empty', locale),
+      children.length ? myChildrenKeyboard(children, locale) : linkChildKeyboard([], locale)
+    );
+  });
+
   bot.action('admin:add_task', async (ctx) => {
     if (ctx.state.user?.role !== 'ADMIN') return;
+    const children = await myChildren(ctx);
+    if (!children.length) {
+      await ctx.answerCbQuery();
+      await promptLinkChildren(ctx);
+      return;
+    }
     ctx.session.wizard = { weekDays: [] };
     ctx.session.awaiting = 'wiz_title';
     await ctx.answerCbQuery();
@@ -89,13 +203,19 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   bot.action('admin:list_tasks', async (ctx) => {
     if (ctx.state.user?.role !== 'ADMIN') return;
     await ctx.answerCbQuery();
-    const children = await listChildren();
-    await ctx.reply(t('admin.select_child', ctx.state.user.locale), childrenFilterKeyboard(children, ctx.state.user.locale));
+    const children = await myChildren(ctx);
+    const locale = ctx.state.user.locale;
+    if (!children.length) {
+      await promptLinkChildren(ctx);
+      return;
+    }
+    await ctx.reply(t('admin.select_child', locale), childrenFilterKeyboard(children, locale));
   });
 
   bot.action(/^admin:tasks_child:(\d+)$/, async (ctx) => {
     if (ctx.state.user?.role !== 'ADMIN') return;
     const childId = Number(ctx.match[1]);
+    if (!(await ensureParentOf(ctx, childId))) return;
     const tasks = await taskService.listForChildFilter(childId);
     await ctx.answerCbQuery();
     const locale = ctx.state.user.locale;
@@ -109,18 +229,23 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action(/^admin:task_off:(\d+)$/, async (ctx) => {
-    await taskService.deactivateTask(Number(ctx.match[1]));
+    const taskId = Number(ctx.match[1]);
+    if (!(await ensureParentOfTask(ctx, taskId))) return;
+    await taskService.deactivateTask(taskId);
     await ctx.answerCbQuery('OK');
   });
 
   bot.action(/^admin:task_del:(\d+)$/, async (ctx) => {
     const id = Number(ctx.match[1]);
+    if (!(await ensureParentOfTask(ctx, id))) return;
     await ctx.answerCbQuery();
     await ctx.editMessageReplyMarkup(confirmDelete(id, ctx.state.user!.locale).reply_markup);
   });
 
   bot.action(/^admin:task_del_yes:(\d+)$/, async (ctx) => {
-    await taskService.deleteTask(Number(ctx.match[1]));
+    const id = Number(ctx.match[1]);
+    if (!(await ensureParentOfTask(ctx, id))) return;
+    await taskService.deleteTask(id);
     await ctx.answerCbQuery('Deleted');
   });
 
@@ -133,8 +258,13 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
 
   bot.action('admin:users', async (ctx) => {
     if (ctx.state.user?.role !== 'ADMIN') return;
-    const children = await listChildren();
+    const children = await myChildren(ctx);
     await ctx.answerCbQuery();
+    const locale = ctx.state.user.locale;
+    if (!children.length) {
+      await promptLinkChildren(ctx);
+      return;
+    }
     for (const c of children) {
       await ctx.reply(`${c.name} — ${c.pointsBalance}⭐`, {
         reply_markup: {
@@ -152,12 +282,12 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
 
   bot.action(/^admin:pts:(\d+):(-?\d+)$/, async (ctx) => {
     const userId = Number(ctx.match[1]);
+    if (!(await ensureParentOf(ctx, userId))) return;
     const delta = Number(ctx.match[2]);
     await pointsService.adjustPoints(userId, delta, 'admin');
     await ctx.answerCbQuery('OK');
   });
 
-  // Wizard callbacks
   bot.action('wiz:cancel', async (ctx) => {
     ctx.session.wizard = {};
     ctx.session.awaiting = undefined;
@@ -174,13 +304,20 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
       return;
     }
     wiz(ctx).points = Number(ctx.match[1]);
-    const children = await listChildren();
+    const children = await myChildren(ctx);
+    if (!children.length) {
+      await ctx.answerCbQuery();
+      await promptLinkChildren(ctx);
+      return;
+    }
     await ctx.answerCbQuery();
     await ctx.reply(t('admin.select_child', locale), childrenKeyboard(children, locale));
   });
 
   bot.action(/^wiz:child:(\d+)$/, async (ctx) => {
-    wiz(ctx).assigneeId = Number(ctx.match[1]);
+    const childId = Number(ctx.match[1]);
+    if (!(await ensureParentOf(ctx, childId))) return;
+    wiz(ctx).assigneeId = childId;
     await ctx.answerCbQuery();
     await ctx.reply(t('wizard.recurrence', ctx.state.user!.locale), recurrenceKeyboard(ctx.state.user!.locale));
   });
@@ -241,6 +378,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
       await ctx.answerCbQuery('Incomplete');
       return;
     }
+    if (!(await ensureParentOf(ctx, w.assigneeId))) return;
 
     let dueAt: Date | null = null;
     let notifyTime: string | null = null;
@@ -296,7 +434,11 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
     if (awaiting === 'wiz_points') {
       w.points = Number(text) || 10;
       ctx.session.awaiting = undefined;
-      const children = await listChildren();
+      const children = await myChildren(ctx);
+      if (!children.length) {
+        await promptLinkChildren(ctx);
+        return;
+      }
       await ctx.reply(t('admin.select_child', locale), childrenKeyboard(children, locale));
       return;
     }

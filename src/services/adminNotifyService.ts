@@ -1,19 +1,20 @@
 import type { Locale } from '@prisma/client';
 import type { Telegraf } from 'telegraf';
 import { t } from '../i18n';
-import { listAdmins } from './userService';
+import { listParentTelegramIdsForChild } from './relationService';
 import type { BotContext } from '../bot/context';
 
-export async function notifyAdmins(
+export async function notifyParentsOfChild(
   bot: Telegraf<BotContext>,
+  childId: number,
   key: string,
   params: Record<string, string | number>
 ) {
-  const admins = await listAdmins();
+  const parents = await listParentTelegramIdsForChild(childId);
   await Promise.all(
-    admins.map((admin) =>
+    parents.map((parent) =>
       bot.telegram
-        .sendMessage(Number(admin.telegramId), t(key, admin.locale, params))
+        .sendMessage(Number(parent.telegramId), t(key, parent.locale, params))
         .catch(() => undefined)
     )
   );
@@ -21,11 +22,12 @@ export async function notifyAdmins(
 
 export async function taskCompleted(
   bot: Telegraf<BotContext>,
+  childId: number,
   childName: string,
   taskTitle: string,
   points: number
 ) {
-  await notifyAdmins(bot, 'admin.notify.taskDone', {
+  await notifyParentsOfChild(bot, childId, 'admin.notify.taskDone', {
     child: childName,
     task: taskTitle,
     points,
@@ -34,10 +36,11 @@ export async function taskCompleted(
 
 export async function childTaskCompleted(
   bot: Telegraf<BotContext>,
+  childId: number,
   childName: string,
   taskTitle: string
 ) {
-  await notifyAdmins(bot, 'admin.notify.childTaskDone', {
+  await notifyParentsOfChild(bot, childId, 'admin.notify.childTaskDone', {
     child: childName,
     task: taskTitle,
   });
@@ -45,11 +48,12 @@ export async function childTaskCompleted(
 
 export async function rewardRedeemed(
   bot: Telegraf<BotContext>,
+  childId: number,
   childName: string,
   rewardTitle: string,
   cost: number
 ) {
-  await notifyAdmins(bot, 'admin.notify.rewardRedeemed', {
+  await notifyParentsOfChild(bot, childId, 'admin.notify.rewardRedeemed', {
     child: childName,
     reward: rewardTitle,
     cost,
@@ -58,8 +62,12 @@ export async function rewardRedeemed(
 
 export async function petLevelUp(
   bot: Telegraf<BotContext>,
+  childId: number,
   childName: string,
   level: number
 ) {
-  await notifyAdmins(bot, 'admin.notify.petLevelUp', { child: childName, level });
+  await notifyParentsOfChild(bot, childId, 'admin.notify.petLevelUp', {
+    child: childName,
+    level,
+  });
 }
