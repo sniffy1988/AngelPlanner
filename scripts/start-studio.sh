@@ -18,5 +18,6 @@ if [ ! -f "$DB_PATH" ]; then
   npx prisma migrate deploy
 fi
 
-echo "Starting Prisma Studio on 0.0.0.0:6666"
-exec npx prisma studio --port 6666 --hostname 0.0.0.0 -b none
+STUDIO_PORT="${STUDIO_PORT:-7777}"
+echo "Starting Prisma Studio on 0.0.0.0:${STUDIO_PORT}"
+exec npx prisma studio --port "${STUDIO_PORT}" --hostname 0.0.0.0 -b none

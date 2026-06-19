@@ -10,8 +10,9 @@ echo "Running migrations..."
 npx prisma migrate deploy
 npx prisma db seed
 
-echo "Starting Prisma Studio on 0.0.0.0:6666"
-npx prisma studio --port 6666 --hostname 0.0.0.0 --browser none &
+STUDIO_PORT="${STUDIO_PORT:-7777}"
+echo "Starting Prisma Studio on 0.0.0.0:${STUDIO_PORT}"
+npx prisma studio --port "${STUDIO_PORT}" --hostname 0.0.0.0 --browser none &
 sleep 2
 
 echo "Starting AngelPlanner bot..."

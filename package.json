@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "studio": "prisma studio --port 6666 --hostname 127.0.0.1",
+    "studio": "prisma studio --port 7777 --hostname 127.0.0.1",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "pets:generate": "node scripts/generate-pet-assets.mjs",

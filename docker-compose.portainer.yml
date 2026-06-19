@@ -1,5 +1,5 @@
 # Portainer Stack (Docker Compose)
-# Prisma Studio: http://<IP-сервера>:6666
+# Prisma Studio: http://<IP-сервера>:7777
 # BOT_TOKEN — в Environment variables стека
 
 services:
@@ -13,8 +13,9 @@ services:
       TZ: Europe/Kyiv
       DEFAULT_LOCALE: ua
       BROWSER: none
+      STUDIO_PORT: "7777"
     ports:
-      - "6666:6666"
+      - "7777:7777"
     volumes:
       - angelplanner-data:/app/data
 

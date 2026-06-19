@@ -10,8 +10,9 @@ services:
       DATABASE_URL: "file:/app/data/angelplanner.db"
       TZ: Europe/Kyiv
       BROWSER: none
+      STUDIO_PORT: "7777"
     ports:
-      - "6666:6666"
+      - "7777:7777"
     volumes:
       - angelplanner-data:/app/data
     restart: unless-stopped

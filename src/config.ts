@@ -13,7 +13,7 @@ export const config = {
   botToken: required('BOT_TOKEN'),
   databaseUrl: process.env.DATABASE_URL ?? 'file:./data/angelplanner.db',
   tz: process.env.TZ ?? 'Europe/Kyiv',
-  studioPort: Number(process.env.STUDIO_PORT ?? 6666),
+  studioPort: Number(process.env.STUDIO_PORT ?? 7777),
   defaultLocale,
   stickerLevelUp: process.env.STICKER_LEVEL_UP || undefined,
   petFeedCost: 5,

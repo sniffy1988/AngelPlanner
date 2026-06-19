@@ -20,7 +20,7 @@
 - **Telegraf** + TypeScript
 - **SQLite** + Prisma ORM
 - **node-cron** (Europe/Kyiv timezone)
-- **Prisma Studio** on http://localhost:6666
+- **Prisma Studio** on http://localhost:7777
 
 ## Quick start
 
@@ -47,7 +47,7 @@ npm run studio
 
 4. In Telegram: parent and child send `/start` to register.
 
-5. Open http://localhost:6666 → set parent's `User.role` to `ADMIN`.
+5. Open http://localhost:7777 → set parent's `User.role` to `ADMIN`.
 
 6. В боте: `⚙️ Адмін` → `👨‍👧 Мої діти` → **Прив'язати дитину** (выбрать Ангелину).
 
@@ -62,7 +62,7 @@ npm run studio
 | `BOT_TOKEN` | Telegram bot token (required) |
 | `DATABASE_URL` | SQLite path, default `file:./data/angelplanner.db` |
 | `TZ` | Timezone, default `Europe/Kyiv` |
-| `STUDIO_PORT` | Prisma Studio port, default `6666` |
+| `STUDIO_PORT` | Prisma Studio port, default `7777` |
 | `DEFAULT_LOCALE` | Fallback locale: `ua`, `ru`, or `en` |
 
 ## Scripts
@@ -72,7 +72,7 @@ npm run studio
 | `npm run dev` | Start bot with hot reload |
 | `npm run build` | Compile TypeScript |
 | `npm run start` | Run production build |
-| `npm run studio` | Prisma Studio at :6666 |
+| `npm run studio` | Prisma Studio at :7777 |
 | `npm run db:migrate` | Apply migrations (production) |
 | `npm run db:seed` | Seed achievements |
 | `npm run typecheck` | TypeScript check |
@@ -83,7 +83,7 @@ npm run studio
 docker compose build
 docker compose up -d
 docker compose logs -f bot
-# Prisma Studio: http://localhost:6666
+# Prisma Studio: http://localhost:7777
 ```
 
 Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
@@ -120,26 +120,26 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
 ### 4. Назначить админа (Prisma Studio)
 
-### 4. Prisma Studio (порт 6666)
+### 4. Prisma Studio (порт 7777)
 
-Один контейнер `angelplanner` (бот + Studio). Порт `6666:6666`.
+Один контейнер `angelplanner` (бот + Studio). Порт `7777:7777`.
 
 1. Удалите старые контейнеры `angelplanner-*`
 2. **Stacks** → Update stack → вставьте `docker-compose.portainer.yml`
 3. **Pull and redeploy** (после сборки образа в GitHub Actions)
-4. В Portainer у контейнера должно быть **Published Ports: 6666→6666**
-5. Откройте http://`10.10.20.22`:6666
+4. В Portainer у контейнера должно быть **Published Ports: 7777→7777**
+5. Откройте http://`10.10.20.22`:7777
 
 **Проверка на сервере (SSH):**
 ```bash
-ss -tlnp | grep 6666          # порт слушается?
-curl -I http://127.0.0.1:6666   # отвечает локально?
+ss -tlnp | grep 7777          # порт слушается?
+curl -I http://127.0.0.1:7777   # отвечает локально?
 docker logs $(docker ps -qf name=app) --tail 20
 ```
 
 В логах должно быть:
 ```
-Starting Prisma Studio on 0.0.0.0:6666
+Starting Prisma Studio on 0.0.0.0:7777
 Starting AngelPlanner bot...
 ```
 

@@ -22,5 +22,5 @@ RUN chmod +x /app/scripts/start-prod.sh
 RUN mkdir -p /app/data
 VOLUME ["/app/data"]
 ENV DATABASE_URL="file:/app/data/angelplanner.db"
-EXPOSE 6666
+EXPOSE 7777
 CMD ["sh", "/app/scripts/start-prod.sh"]
