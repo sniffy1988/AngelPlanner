@@ -9,7 +9,7 @@ import type { BotContext } from '../context';
 export async function showMainMenu(ctx: BotContext) {
   const user = ctx.state.user;
   if (!user) return;
-  await ctx.reply(t('start.welcome', user.locale, { name: user.name ?? 'Friend' }), {
+  await ctx.reply(t('start.welcome', user.locale, { name: user.name ?? t('app.child_name', user.locale) }), {
     reply_markup: mainMenuKeyboard(user.locale, user.role === 'ADMIN').reply_markup,
   });
 }
@@ -25,6 +25,7 @@ export function registerCommonHandlers(bot: Telegraf<BotContext>) {
 
     if (!user.name) {
       ctx.session.awaiting = 'name';
+      await ctx.reply(t('start.new', user.locale));
       await ctx.reply(t('register.ask_name', user.locale));
       return;
     }

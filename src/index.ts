@@ -10,7 +10,7 @@ async function main() {
   startScheduler(bot);
 
   await bot.launch();
-  console.log('AngelPlanner bot started');
+  console.log('AngelPlanner bot started — for Angelina ✨');
 
   process.once('SIGINT', () => bot.stop('SIGINT'));
   process.once('SIGTERM', () => bot.stop('SIGTERM'));

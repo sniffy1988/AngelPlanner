@@ -1,7 +1,7 @@
 {
   "name": "angelplanner",
   "version": "1.0.0",
-  "description": "Telegram task planner bot for kids",
+  "description": "Personal Telegram task planner for Angelina",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
