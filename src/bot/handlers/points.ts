@@ -3,6 +3,7 @@ import { menuLabels, t } from '../../i18n';
 import * as pointsService from '../../services/pointsService';
 import * as rewardService from '../../services/rewardService';
 import { rewardsKeyboard, confirmRedeem } from '../keyboards/rewards';
+import { config } from '../../config';
 import type { BotContext } from '../context';
 
 export function registerPointsHandlers(bot: Telegraf<BotContext>) {
@@ -17,8 +18,12 @@ export function registerPointsHandlers(bot: Telegraf<BotContext>) {
         type: tx.type,
       })
     );
+    const hint =
+      user.role === 'CHILD'
+        ? `\n\n${t('points.spend_hint', user.locale, { cost: config.petFeedCost })}`
+        : '';
     await ctx.reply(
-      `${t('points.balance', user.locale, { balance: user.pointsBalance })}\n\n${t('points.history', user.locale)}\n${lines.join('\n') || '—'}`
+      `${t('points.balance', user.locale, { balance: user.pointsBalance })}${hint}\n\n${t('points.history', user.locale)}\n${lines.join('\n') || '—'}`
     );
   });
 

@@ -1,0 +1,1 @@
+-- SQLite stores Role as TEXT; PARENT is now a valid value alongside ADMIN and CHILD.

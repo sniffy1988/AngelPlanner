@@ -10,7 +10,7 @@ export async function findByTelegramId(telegramId: bigint) {
 
 export async function findOrCreate(
   telegramId: bigint,
-  profile: { firstName?: string; lastName?: string }
+  _profile: { firstName?: string; lastName?: string }
 ): Promise<User & { pet: { id: number } | null }> {
   const existing = await prisma.user.findUnique({
     where: { telegramId },
@@ -18,19 +18,43 @@ export async function findOrCreate(
   });
   if (existing) return existing;
 
-  const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || null;
   return prisma.user.create({
-    data: { telegramId, name },
+    data: { telegramId, registrationStep: 'name' },
     include: { pet: true },
   });
 }
 
 export async function updateName(userId: number, name: string) {
-  return prisma.user.update({ where: { id: userId }, data: { name } });
+  return prisma.user.update({
+    where: { id: userId },
+    data: { name, registrationStep: 'role' },
+  });
 }
 
 export async function updateLocale(userId: number, locale: Locale) {
   return prisma.user.update({ where: { id: userId }, data: { locale } });
+}
+
+export async function updateRole(userId: number, role: 'PARENT' | 'CHILD') {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { role, registrationStep: 'locale' },
+  });
+}
+
+export async function advanceRegistrationStep(
+  userId: number,
+  step: 'name' | 'role' | 'locale' | 'pet' | 'done'
+) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { registrationStep: step },
+    include: { pet: true },
+  });
+}
+
+export async function completeRegistration(userId: number) {
+  return advanceRegistrationStep(userId, 'done');
 }
 
 export async function listChildren() {
@@ -40,8 +64,11 @@ export async function listChildren() {
   });
 }
 
-export async function listAdmins() {
-  return prisma.user.findMany({ where: { role: 'ADMIN' } });
+export async function listParents() {
+  return prisma.user.findMany({
+    where: { role: { in: ['PARENT', 'ADMIN'] } },
+    orderBy: { name: 'asc' },
+  });
 }
 
 export async function getUserById(id: number) {

@@ -1,5 +1,6 @@
 import type { Telegraf } from 'telegraf';
 import type { RecurrenceType } from '@prisma/client';
+import { isParentRole } from '../../roles';
 import { menuLabels, t } from '../../i18n';
 import {
   isParentOf,
@@ -120,17 +121,20 @@ async function promptLinkChildren(ctx: BotContext) {
 }
 
 export function registerAdminHandlers(bot: Telegraf<BotContext>) {
-  bot.hears(menuLabels('menu.admin'), async (ctx) => {
+  const openParentPanel = async (ctx: BotContext) => {
     const user = ctx.state.user;
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !isParentRole(user.role)) {
       await ctx.reply(t('admin.access_denied', user?.locale ?? 'ua'));
       return;
     }
-    await ctx.reply(t('admin.title', user.locale), adminMenuKeyboard(user.locale));
-  });
+    const title = user.role === 'ADMIN' ? t('admin.title', user.locale) : t('parent.title', user.locale);
+    await ctx.reply(title, adminMenuKeyboard(user.locale));
+  };
+
+  bot.hears([...menuLabels('menu.parent'), ...menuLabels('menu.admin')], openParentPanel);
 
   bot.action('admin:children', async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     await ctx.answerCbQuery();
     const children = await myChildren(ctx);
     const locale = ctx.state.user.locale;
@@ -142,7 +146,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action('admin:link_child', async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     await ctx.answerCbQuery();
     const unlinked = await listUnlinkedChildrenForParent(parentId(ctx));
     await ctx.reply(
@@ -152,7 +156,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action(/^admin:link_child:(\d+)$/, async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     const childId = Number(ctx.match[1]);
     const locale = ctx.state.user.locale;
     try {
@@ -166,7 +170,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action(/^admin:unlink_child:(\d+)$/, async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     const childId = Number(ctx.match[1]);
     if (!(await ensureParentOf(ctx, childId))) return;
     await ctx.answerCbQuery();
@@ -174,7 +178,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action(/^admin:unlink_yes:(\d+)$/, async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     const childId = Number(ctx.match[1]);
     if (!(await ensureParentOf(ctx, childId))) return;
     await unlinkParentChild(parentId(ctx), childId);
@@ -188,7 +192,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action('admin:add_task', async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     const children = await myChildren(ctx);
     if (!children.length) {
       await ctx.answerCbQuery();
@@ -202,7 +206,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action('admin:list_tasks', async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     await ctx.answerCbQuery();
     const children = await myChildren(ctx);
     const locale = ctx.state.user.locale;
@@ -214,7 +218,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action(/^admin:tasks_child:(\d+)$/, async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     const childId = Number(ctx.match[1]);
     if (!(await ensureParentOf(ctx, childId))) return;
     const tasks = await taskService.listForChildFilter(childId);
@@ -251,14 +255,14 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.action('admin:rewards', async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     await ctx.answerCbQuery();
     ctx.session.awaiting = 'reward_title';
     await ctx.reply(t('admin.reward_ask_title', ctx.state.user.locale));
   });
 
   bot.action('admin:users', async (ctx) => {
-    if (ctx.state.user?.role !== 'ADMIN') return;
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return;
     const children = await myChildren(ctx);
     await ctx.answerCbQuery();
     const locale = ctx.state.user.locale;
@@ -424,7 +428,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   });
 
   bot.on('text', async (ctx, next) => {
-    if (ctx.state.user?.role !== 'ADMIN') return next();
+    if (!ctx.state.user || !isParentRole(ctx.state.user.role)) return next();
     const awaiting = ctx.session.awaiting;
     const w = wiz(ctx);
     const text = ctx.message.text.trim();

@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma';
+import { isParentRole } from '../roles';
 
 export async function linkParentChild(parentId: number, childId: number) {
   if (parentId === childId) throw new Error('SAME_USER');
@@ -6,7 +7,7 @@ export async function linkParentChild(parentId: number, childId: number) {
     prisma.user.findUnique({ where: { id: parentId } }),
     prisma.user.findUnique({ where: { id: childId } }),
   ]);
-  if (!parent || parent.role !== 'ADMIN') throw new Error('NOT_PARENT');
+  if (!parent || !isParentRole(parent.role)) throw new Error('NOT_PARENT');
   if (!child || child.role !== 'CHILD') throw new Error('NOT_CHILD');
 
   return prisma.parentChild.upsert({

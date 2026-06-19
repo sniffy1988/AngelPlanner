@@ -47,7 +47,7 @@ npm run studio
 
 4. In Telegram: parent and child send `/start` to register.
 
-5. Open http://localhost:7777 → set parent's `User.role` to `ADMIN`.
+5. New users choose **parent** or **child** during `/start` registration. Existing parents can still set `User.role` to `PARENT` in Studio if needed.
 
 6. В боте: `⚙️ Адмін` → `👨‍👧 Мої діти` → **Прив'язати дитину** (выбрать Ангелину).
 
@@ -156,14 +156,16 @@ Portainer → Stack `angelplanner` → **Pull and redeploy**
 
 ## Parent–child links
 
-- Родитель (`role=ADMIN`) привязывает детей в боте: `⚙️ Адмін` → `👨‍👧 Мої діти` → `➕ Прив'язати дитину`
+- Родитель (`role=PARENT`) привязывает детей в боте: `👨‍👩‍👧 Батьки` → `👨‍👧 Мої діти` → `➕ Прив'язати дитину`
+- Родитель добавляет награды: `👨‍👩‍👧 Батьки` → `🎁 Нагороди`
+- Ребёнок тратит поинты: `🎁 Нагороди` (обмен на приз) или `🏆 Мої досягнення` → `🐣 Вихованець` → `🍎 Годувати`
 - У ребёнка в меню `👨‍👩‍👧 Родичі` — список привязанных родителей
 - Родитель видит задачи, поинты и уведомления **только своих** детей
 - Таблица `ParentChild` в Prisma Studio для ручного редактирования связей
 
 ## Admin access
 
-Admin role is assigned in Prisma Studio (`User.role = ADMIN`), not via environment variables.
+Parent role is assigned in Prisma Studio (`User.role = PARENT`). `ADMIN` also works for backward compatibility.
 
 ## Features
 
