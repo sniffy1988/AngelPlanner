@@ -25,7 +25,24 @@ services:
       DATABASE_URL: "file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30"
       TZ: Europe/Kyiv
       BROWSER: none
-    command: ["/app/scripts/start-studio.sh"]
+    command:
+      - sh
+      - -c
+      - |
+        export DATABASE_URL="file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30"
+        export BROWSER=none
+        echo "Waiting for database..."
+        i=0
+        while [ ! -f /app/data/angelplanner.db ] && [ "$$i" -lt 60 ]; do
+          i=$$((i + 1))
+          sleep 2
+        done
+        if [ ! -f /app/data/angelplanner.db ]; then
+          mkdir -p /app/data
+          npx prisma migrate deploy
+        fi
+        echo "Starting Prisma Studio on 0.0.0.0:6666"
+        exec npx prisma studio --port 6666 --hostname 0.0.0.0 -b none
     ports:
       - "0.0.0.0:6666:6666"
     volumes:
