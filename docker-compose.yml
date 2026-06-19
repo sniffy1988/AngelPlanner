@@ -1,5 +1,5 @@
 services:
-  bot:
+  app:
     image: ghcr.io/sniffy1988/angelplanner:latest
     build:
       context: .
@@ -9,26 +9,7 @@ services:
     environment:
       DATABASE_URL: "file:/app/data/angelplanner.db"
       TZ: Europe/Kyiv
-    volumes:
-      - angelplanner-data:/app/data
-    restart: unless-stopped
-
-  studio:
-    image: ghcr.io/sniffy1988/angelplanner:latest
-    build:
-      context: .
-      platforms:
-        - linux/amd64
-    depends_on:
-      - bot
-    environment:
-      DATABASE_URL: "file:/app/data/angelplanner.db"
-      TZ: Europe/Kyiv
       BROWSER: none
-    command:
-      - sh
-      - -c
-      - sleep 30 && exec npx prisma studio -p 6666 -n 0.0.0.0 -b none
     ports:
       - "6666:6666"
     volumes:

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-export DATABASE_URL="${DATABASE_URL:-file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30}"
+export DATABASE_URL="${DATABASE_URL:-file:/app/data/angelplanner.db}"
 export BROWSER=none
 
 mkdir -p /app/data
@@ -11,7 +11,8 @@ npx prisma migrate deploy
 npx prisma db seed
 
 echo "Starting Prisma Studio on 0.0.0.0:6666"
-npx prisma studio -p 6666 -n 0.0.0.0 -b none &
+npx prisma studio --port 6666 --hostname 0.0.0.0 --browser none &
+sleep 2
 
 echo "Starting AngelPlanner bot..."
 exec node dist/index.js
