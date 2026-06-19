@@ -70,6 +70,72 @@ docker compose logs -f bot
 
 Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
+## Portainer
+
+Бот рассчитан на запуск как **Stack** в Portainer. База SQLite хранится в named volume `angelplanner-data`.
+
+### 1. Подготовка
+
+1. Создайте бота в [@BotFather](https://t.me/BotFather) и скопируйте `BOT_TOKEN`.
+2. Убедитесь, что образ доступен: `ghcr.io/sniffy1988/angelplanner:latest`  
+   Если пакет в GHCR приватный — в Portainer добавьте registry: **Settings → Registries → Add registry** (GitHub / `ghcr.io`, Personal Access Token с `read:packages`).
+
+### 2. Создание стека
+
+1. Portainer → **Stacks** → **Add stack**
+2. Имя: `angelplanner`
+3. Вставьте содержимое [`docker-compose.portainer.yml`](docker-compose.portainer.yml)
+4. Внизу **Environment variables** добавьте:
+
+| Name | Value |
+|------|-------|
+| `BOT_TOKEN` | токен от BotFather |
+
+5. **Deploy the stack**
+
+При первом старте контейнер сам применит миграции и засеет достижения.
+
+### 3. Проверка
+
+- **Containers** → `angelplanner-bot` → **Logs** — должно быть `AngelPlanner bot started`
+- В Telegram: `/start` (родитель + ребёнок)
+
+### 4. Назначить админа
+
+Prisma Studio в контейнере не запущен (только бот). Варианты:
+
+**A. Локально на своём ПК** (рекомендуется):
+
+```bash
+git clone https://github.com/sniffy1988/AngelPlanner.git
+cd AngelPlanner
+npm install
+# Скопируйте БД с сервера:
+docker cp angelplanner-bot:/app/data/angelplanner.db ./data/
+DATABASE_URL="file:./data/angelplanner.db" npm run studio
+```
+
+Откройте http://localhost:6666 → у родителя `User.role` = `ADMIN`.
+
+**B. Через Portainer Console** (если есть доступ к shell):
+
+```bash
+npx prisma studio --port 6666 --hostname 0.0.0.0
+```
+
+И пробросьте порт 6666 (временно, только для настройки).
+
+### 5. Обновление
+
+Portainer → Stack `angelplanner` → **Pull and redeploy**  
+или **Recreate** контейнера — volume с БД сохранится.
+
+### Важно
+
+- Не удаляйте volume `angelplanner-data` — там SQLite с пользователями и задачами
+- `BOT_TOKEN` храните только в Environment variables Portainer, не в git
+- Часовой пояс уже задан: `Europe/Kyiv`
+
 ## Admin access
 
 Admin role is assigned in Prisma Studio (`User.role = ADMIN`), not via environment variables.

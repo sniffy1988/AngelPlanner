@@ -20,4 +20,4 @@ ENV NODE_ENV=production TZ=Europe/Kyiv
 RUN mkdir -p /app/data
 VOLUME ["/app/data"]
 ENV DATABASE_URL="file:/app/data/angelplanner.db"
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/index.js"]

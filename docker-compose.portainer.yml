@@ -1,0 +1,19 @@
+# Portainer Stack — вставьте в Stacks → Add stack → Web editor
+# Переменные BOT_TOKEN задайте в разделе Environment variables стека
+
+services:
+  bot:
+    image: ghcr.io/sniffy1988/angelplanner:latest
+    container_name: angelplanner-bot
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      DATABASE_URL: file:/app/data/angelplanner.db
+      TZ: Europe/Kyiv
+      DEFAULT_LOCALE: ua
+    volumes:
+      - angelplanner-data:/app/data
+
+volumes:
+  angelplanner-data:
+    name: angelplanner-data
