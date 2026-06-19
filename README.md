@@ -122,10 +122,19 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
 Контейнер `angelplanner-studio` доступен на порту **6666**:
 
-1. Откройте http://`<IP-сервера>`:6666
-2. Таблица `User` → у родителя `role` = `ADMIN`
-3. Таблица `ParentChild` — можно привязать родителя к ребёнку вручную (`parentId` + `childId`), или через бот: `⚙️ Адмін` → `👨‍👧 Мої діти`
-3. В Telegram снова `/start`
+1. Убедитесь, что в стеке **два** контейнера: `angelplanner-bot` и `angelplanner-studio`
+2. Логи `angelplanner-studio` → должно быть `Starting Prisma Studio on 0.0.0.0:6666`
+3. Откройте http://`<IP-сервера>`:6666
+4. Таблица `User` → у родителя `role` = `ADMIN`
+5. Таблица `ParentChild` — привязка родитель ↔ ребёнок (или через бот: `⚙️ Адмін` → `👨‍👧 Мої діти`)
+
+**Если 6666 недоступен:**
+
+- Portainer → Stack → **Update the stack** (вставьте актуальный `docker-compose.portainer.yml`) → **Pull and redeploy**
+- Проверьте, что `angelplanner-studio` в статусе **running**, не **restarting**
+- Firewall: `sudo ufw allow 6666/tcp` (если ufw включён)
+- На сервере: `curl http://localhost:6666` — если локально работает, но снаружи нет → firewall/роутер
+- Альтернатива: Portainer → `angelplanner-studio` → **Console** → `/app/scripts/start-studio.sh`
 
 ### 5. Обновление
 

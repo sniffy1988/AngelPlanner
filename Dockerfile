@@ -15,8 +15,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/assets ./assets
+COPY scripts/start-studio.sh ./scripts/start-studio.sh
 COPY package.json ./
 ENV NODE_ENV=production TZ=Europe/Kyiv
+RUN chmod +x /app/scripts/start-studio.sh
 RUN mkdir -p /app/data
 VOLUME ["/app/data"]
 ENV DATABASE_URL="file:/app/data/angelplanner.db"

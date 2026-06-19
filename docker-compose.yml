@@ -19,12 +19,15 @@ services:
       context: .
       platforms:
         - linux/amd64
+    depends_on:
+      - bot
     environment:
-      DATABASE_URL: "file:/app/data/angelplanner.db"
+      DATABASE_URL: "file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30"
       TZ: Europe/Kyiv
-    command: ["sh", "-c", "npx prisma studio --port 6666 --hostname 0.0.0.0"]
+      BROWSER: none
+    command: ["/app/scripts/start-studio.sh"]
     ports:
-      - "6666:6666"
+      - "0.0.0.0:6666:6666"
     volumes:
       - angelplanner-data:/app/data
     restart: unless-stopped

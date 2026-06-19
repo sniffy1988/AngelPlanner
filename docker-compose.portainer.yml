@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     environment:
       BOT_TOKEN: ${BOT_TOKEN}
-      DATABASE_URL: file:/app/data/angelplanner.db
+      DATABASE_URL: file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30
       TZ: Europe/Kyiv
       DEFAULT_LOCALE: ua
     volumes:
@@ -19,12 +19,15 @@ services:
     image: ghcr.io/sniffy1988/angelplanner:latest
     container_name: angelplanner-studio
     restart: unless-stopped
-    command: ["sh", "-c", "npx prisma studio --port 6666 --hostname 0.0.0.0"]
+    depends_on:
+      - bot
+    command: ["/app/scripts/start-studio.sh"]
     environment:
-      DATABASE_URL: file:/app/data/angelplanner.db
+      DATABASE_URL: file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30
       TZ: Europe/Kyiv
+      BROWSER: none
     ports:
-      - "6666:6666"
+      - "0.0.0.0:6666:6666"
     volumes:
       - angelplanner-data:/app/data
 
