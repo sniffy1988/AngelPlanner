@@ -131,10 +131,16 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 **Если 6666 недоступен:**
 
 - Portainer → Stack → **Update the stack** (вставьте актуальный `docker-compose.portainer.yml`) → **Pull and redeploy**
+- Studio использует `network_mode: host` — порт 6666 открывается прямо на сервере (Linux)
 - Проверьте, что `angelplanner-studio` в статусе **running**, не **restarting**
-- Firewall: `sudo ufw allow 6666/tcp` (если ufw включён)
-- На сервере: `curl http://localhost:6666` — если локально работает, но снаружи нет → firewall/роутер
-- Альтернатива: Portainer → `angelplanner-studio` → **Console** → `/app/scripts/start-studio.sh`
+- На сервере по SSH:
+  ```bash
+  docker logs angelplanner-studio --tail 30
+  curl -I http://127.0.0.1:6666
+  ss -tlnp | grep 6666
+  ```
+- Firewall: `sudo ufw allow 6666/tcp` или откройте порт в iptables
+- Если `curl` на сервере работает, а с ПК нет → сеть/firewall между 10.10.20.22 и вашим ПК
 
 ### 5. Обновление
 
