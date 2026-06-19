@@ -18,6 +18,16 @@ export async function createTask(data: CreateTaskInput) {
   return prisma.task.create({ data });
 }
 
+export async function createChildTask(assigneeId: number, title: string, description?: string | null) {
+  return createTask({
+    title,
+    description: description ?? null,
+    points: 0,
+    assigneeId,
+    recurrence: 'NONE',
+  });
+}
+
 export async function getTask(id: number) {
   return prisma.task.findUnique({
     where: { id },

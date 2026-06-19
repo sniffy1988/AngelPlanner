@@ -32,6 +32,17 @@ export async function taskCompleted(
   });
 }
 
+export async function childTaskCompleted(
+  bot: Telegraf<BotContext>,
+  childName: string,
+  taskTitle: string
+) {
+  await notifyAdmins(bot, 'admin.notify.childTaskDone', {
+    child: childName,
+    task: taskTitle,
+  });
+}
+
 export async function rewardRedeemed(
   bot: Telegraf<BotContext>,
   childName: string,

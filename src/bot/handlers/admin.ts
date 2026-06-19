@@ -160,6 +160,7 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
   // Wizard callbacks
   bot.action('wiz:cancel', async (ctx) => {
     ctx.session.wizard = {};
+    ctx.session.awaiting = undefined;
     await ctx.answerCbQuery();
     await ctx.reply(t('common.cancel', ctx.state.user!.locale));
   });

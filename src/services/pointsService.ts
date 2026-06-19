@@ -30,23 +30,29 @@ export async function completeTask(
   if (!user) throw new Error('NO_USER');
 
   const streak = updateStreak(user.lastTaskCompletedDate, user.currentStreak, user.longestStreak);
+  const earnsPoints = task.points > 0;
+
   await prisma.$transaction([
     prisma.task.update({
       where: { id: taskId },
       data: { status: 'DONE' },
     }),
-    prisma.pointTransaction.create({
-      data: {
-        userId,
-        amount: task.points,
-        type: 'EARN_TASK',
-        taskId: task.id,
-      },
-    }),
+    ...(earnsPoints
+      ? [
+          prisma.pointTransaction.create({
+            data: {
+              userId,
+              amount: task.points,
+              type: 'EARN_TASK',
+              taskId: task.id,
+            },
+          }),
+        ]
+      : []),
     prisma.user.update({
       where: { id: userId },
       data: {
-        pointsBalance: user.pointsBalance + task.points,
+        ...(earnsPoints ? { pointsBalance: user.pointsBalance + task.points } : {}),
         tasksCompletedCount: user.tasksCompletedCount + 1,
         currentStreak: streak.current,
         longestStreak: streak.longest,
@@ -57,7 +63,11 @@ export async function completeTask(
 
   const petResult = await petService.onTaskComplete(userId, task.points);
 
-  await adminNotify.taskCompleted(bot, user.name ?? 'Child', task.title, task.points);
+  if (earnsPoints) {
+    await adminNotify.taskCompleted(bot, user.name ?? 'Child', task.title, task.points);
+  } else {
+    await adminNotify.childTaskCompleted(bot, user.name ?? 'Child', task.title);
+  }
 
   if (petResult.levelUp) {
     await achievementService.notifyPetLevel(bot, userId, petResult.newLevel);
@@ -72,7 +82,7 @@ export async function completeTask(
     await achievementService.checkAll(bot, updatedUser);
   }
 
-  return { task, petResult, balance: user.pointsBalance + task.points, locale: user.locale };
+  return { task, petResult, balance: user.pointsBalance + (earnsPoints ? task.points : 0), locale: user.locale };
 }
 
 export async function redeemReward(

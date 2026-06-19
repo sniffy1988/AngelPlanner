@@ -41,7 +41,9 @@ export async function getPet(userId: number) {
 
 export async function onTaskComplete(userId: number, taskPoints: number) {
   const pet = await prisma.pet.findUnique({ where: { userId } });
-  if (!pet) return { xpGain: 0, levelUp: false, newLevel: 1 };
+  if (!pet || taskPoints <= 0) {
+    return { xpGain: 0, levelUp: false, newLevel: pet?.level ?? 1, petName: pet?.name };
+  }
 
   const xpGain = Math.max(taskPoints, 5);
   const newXp = pet.xp + xpGain;
