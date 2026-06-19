@@ -1,0 +1,17 @@
+services:
+  bot:
+    image: ghcr.io/sniffy1988/angelplanner:latest
+    build:
+      context: .
+      platforms:
+        - linux/amd64
+    env_file: .env
+    environment:
+      DATABASE_URL: "file:/app/data/angelplanner.db"
+      TZ: Europe/Kyiv
+    volumes:
+      - angelplanner-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  angelplanner-data:

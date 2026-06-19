@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    Int                 @id @default(autoincrement())
+  telegramId            BigInt              @unique
+  name                  String?
+  role                  Role                @default(CHILD)
+  locale                Locale              @default(ua)
+  pointsBalance         Int                 @default(0)
+  tasksCompletedCount   Int                 @default(0)
+  currentStreak         Int                 @default(0)
+  longestStreak         Int                 @default(0)
+  lastTaskCompletedDate String?
+  tasks                 Task[]
+  pet                   Pet?
+  achievements          UserAchievement[]
+  pointTransactions     PointTransaction[]
+  createdAt             DateTime            @default(now())
+}
+
+enum Role {
+  ADMIN
+  CHILD
+}
+
+enum Locale {
+  ru
+  ua
+  en
+}
+
+enum TaskStatus {
+  PENDING
+  DONE
+  CANCELLED
+}
+
+enum RecurrenceType {
+  NONE
+  DAILY
+  WEEKLY
+}
+
+model Task {
+  id                    Int            @id @default(autoincrement())
+  title                 String
+  description           String?
+  points                Int            @default(10)
+  status                TaskStatus     @default(PENDING)
+  assigneeId            Int
+  assignee              User           @relation(fields: [assigneeId], references: [id])
+  recurrence            RecurrenceType @default(NONE)
+  dueAt                 DateTime?
+  notifyTime            String?
+  weekDays              String?
+  remindBeforeMinutes   Int?
+  lastNotifiedAt        DateTime?
+  lastEarlyNotifiedAt   DateTime?
+  isActive              Boolean        @default(true)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+}
+
+model Reward {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  cost        Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+enum PointTransactionType {
+  EARN_TASK
+  REDEEM_REWARD
+  ADMIN_ADJUST
+}
+
+model PointTransaction {
+  id        Int                  @id @default(autoincrement())
+  userId    Int
+  user      User                 @relation(fields: [userId], references: [id])
+  amount    Int
+  type      PointTransactionType
+  taskId    Int?
+  rewardId  Int?
+  note      String?
+  createdAt DateTime             @default(now())
+}
+
+model NotificationLog {
+  id        Int              @id @default(autoincrement())
+  taskId    Int
+  kind      NotificationKind @default(DUE)
+  sentAt    DateTime         @default(now())
+  message   String
+}
+
+enum NotificationKind {
+  EARLY
+  DUE
+}
+
+enum PetStage {
+  EGG
+  BABY
+  TEEN
+  ADULT
+}
+
+model Pet {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique
+  user        User      @relation(fields: [userId], references: [id])
+  name        String    @default("Пушок")
+  stage       PetStage  @default(EGG)
+  xp          Int       @default(0)
+  level       Int       @default(1)
+  hunger      Int       @default(50)
+  happiness   Int       @default(80)
+  lastPlayedAt DateTime?
+  lastDecayAt DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum AchievementCode {
+  FIRST_TASK
+  TASKS_10
+  TASKS_50
+  STREAK_3
+  STREAK_7
+  POINTS_100
+  POINTS_500
+  PET_LEVEL_5
+  PET_LEVEL_10
+  FIRST_REWARD
+}
+
+model Achievement {
+  id        Int               @id @default(autoincrement())
+  code      AchievementCode   @unique
+  titleKey  String
+  descKey   String
+  emoji     String
+  users     UserAchievement[]
+}
+
+model UserAchievement {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id])
+  achievementId Int
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+}
