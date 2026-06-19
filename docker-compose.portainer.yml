@@ -1,18 +1,28 @@
-# Portainer Stack — вставьте в Stacks → Add stack → Web editor
-# Переменные BOT_TOKEN задайте в разделе Environment variables стека
-# Prisma Studio: http://<IP-сервера>:6666 (в том же контейнере, что и бот)
-
 services:
   bot:
     image: ghcr.io/sniffy1988/angelplanner:latest
-    container_name: angelplanner-bot
     restart: unless-stopped
     environment:
       BOT_TOKEN: ${BOT_TOKEN}
-      DATABASE_URL: file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30
+      DATABASE_URL: file:/app/data/angelplanner.db
       TZ: Europe/Kyiv
       DEFAULT_LOCALE: ua
+    volumes:
+      - angelplanner-data:/app/data
+
+  studio:
+    image: ghcr.io/sniffy1988/angelplanner:latest
+    restart: unless-stopped
+    depends_on:
+      - bot
+    environment:
+      DATABASE_URL: file:/app/data/angelplanner.db
+      TZ: Europe/Kyiv
       BROWSER: none
+    command:
+      - sh
+      - -c
+      - sleep 30 && exec npx prisma studio -p 6666 -n 0.0.0.0 -b none
     ports:
       - "6666:6666"
     volumes:
@@ -20,4 +30,3 @@ services:
 
 volumes:
   angelplanner-data:
-    name: angelplanner-data

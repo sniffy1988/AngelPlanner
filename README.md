@@ -120,21 +120,27 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
 ### 4. Назначить админа (Prisma Studio)
 
-Контейнер `angelplanner-bot` запускает бот **и** Prisma Studio на порту **6666**:
+### 4. Назначить админа (Prisma Studio)
 
-1. Убедитесь, что в стеке **один** контейнер `angelplanner-bot` с **Published Ports: 6666**
-2. Удалите старый контейнер `angelplanner-studio` (если остался) — Studio теперь внутри bot
-3. Логи `angelplanner-bot` → `Starting Prisma Studio on 0.0.0.0:6666`
-4. Откройте http://`<IP-сервера>`:6666
-4. Таблица `User` → у родителя `role` = `ADMIN`
-5. Таблица `ParentChild` — привязка родитель ↔ ребёнок (или через бот: `⚙️ Адмін` → `👨‍👧 Мої діти`)
+Два контейнера: `bot` + `studio`. Studio на порту **6666**.
 
-**Если 6666 недоступен:**
+1. **Stacks** → `angelplanner` → **Update the stack** → вставьте `docker-compose.portainer.yml`
+2. Перед обновлением удалите старые контейнеры `angelplanner-bot` и `angelplanner-studio` (если есть конфликт)
+3. У `studio` должно быть **Published Ports: 6666→6666**
+4. Логи `studio`: `Prisma Studio is up on http://0.0.0.0:6666`
+5. Откройте http://`10.10.20.22`:6666
 
-- Дождитесь сборки нового образа в GitHub Actions, затем **Pull and redeploy**
-- В Portainer у `angelplanner-bot` должно быть **Published Ports: 6666→6666**
-- Удалите отдельный контейнер `angelplanner-studio` если он ещё есть
-- На сервере: `docker logs angelplanner-bot --tail 30` и `curl -I http://127.0.0.1:6666`
+**Если 500 при открытии Studio:**
+
+- Подождите 30 сек после старта (studio запускается с задержкой)
+- Проверьте логи: `docker logs <studio-container-id>`
+- Убедитесь, что бот уже запустился и создал БД
+
+**Если 500 при обновлении стека в Portainer:**
+
+- Удалите старые контейнеры вручную, затем обновите стек
+- Убедитесь, что `BOT_TOKEN` задан в Environment variables
+- Не используйте `container_name` — compose без него (уже исправлено)
 
 ### 5. Обновление
 
