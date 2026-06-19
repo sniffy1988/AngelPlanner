@@ -66,6 +66,7 @@ npm run studio
 docker compose build
 docker compose up -d
 docker compose logs -f bot
+# Prisma Studio: http://localhost:6666
 ```
 
 Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
@@ -100,30 +101,15 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 - **Containers** → `angelplanner-bot` → **Logs** — должно быть `AngelPlanner bot started`
 - В Telegram: `/start` (родитель + ребёнок)
 
-### 4. Назначить админа
+### 4. Назначить админа (Prisma Studio)
 
-Prisma Studio в контейнере не запущен (только бот). Варианты:
+В стеке есть отдельный контейнер `angelplanner-studio` — та же БД, порт **6666**.
 
-**A. Локально на своём ПК** (рекомендуется):
+1. Откройте http://`<IP-сервера>`:6666 (или через VPN/SSH-туннель)
+2. Таблица `User` → у родителя `role` = `ADMIN`
+3. Сохраните → в Telegram снова `/start`
 
-```bash
-git clone https://github.com/sniffy1988/AngelPlanner.git
-cd AngelPlanner
-npm install
-# Скопируйте БД с сервера:
-docker cp angelplanner-bot:/app/data/angelplanner.db ./data/
-DATABASE_URL="file:./data/angelplanner.db" npm run studio
-```
-
-Откройте http://localhost:6666 → у родителя `User.role` = `ADMIN`.
-
-**B. Через Portainer Console** (если есть доступ к shell):
-
-```bash
-npx prisma studio --port 6666 --hostname 0.0.0.0
-```
-
-И пробросьте порт 6666 (временно, только для настройки).
+> **Безопасность:** Prisma Studio без авторизации. Не выставляйте порт 6666 в интернет без VPN/firewall — только локальная сеть или туннель.
 
 ### 5. Обновление
 
