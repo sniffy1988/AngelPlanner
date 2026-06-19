@@ -1,5 +1,6 @@
 # Portainer Stack — вставьте в Stacks → Add stack → Web editor
 # Переменные BOT_TOKEN задайте в разделе Environment variables стека
+# Prisma Studio: http://<IP-сервера>:6666
 
 services:
   bot:

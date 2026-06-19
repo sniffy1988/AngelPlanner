@@ -103,13 +103,11 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
 ### 4. Назначить админа (Prisma Studio)
 
-В стеке есть отдельный контейнер `angelplanner-studio` — та же БД, порт **6666**.
+Контейнер `angelplanner-studio` доступен на порту **6666**:
 
-1. Откройте http://`<IP-сервера>`:6666 (или через VPN/SSH-туннель)
+1. Откройте http://`<IP-сервера>`:6666
 2. Таблица `User` → у родителя `role` = `ADMIN`
-3. Сохраните → в Telegram снова `/start`
-
-> **Безопасность:** Prisma Studio без авторизации. Не выставляйте порт 6666 в интернет без VPN/firewall — только локальная сеть или туннель.
+3. В Telegram снова `/start`
 
 ### 5. Обновление
 
