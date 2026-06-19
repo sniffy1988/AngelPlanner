@@ -120,27 +120,21 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
 ### 4. Назначить админа (Prisma Studio)
 
-Контейнер `angelplanner-studio` доступен на порту **6666**:
+Контейнер `angelplanner-bot` запускает бот **и** Prisma Studio на порту **6666**:
 
-1. Убедитесь, что в стеке **два** контейнера: `angelplanner-bot` и `angelplanner-studio`
-2. Логи `angelplanner-studio` → должно быть `Starting Prisma Studio on 0.0.0.0:6666`
-3. Откройте http://`<IP-сервера>`:6666
+1. Убедитесь, что в стеке **один** контейнер `angelplanner-bot` с **Published Ports: 6666**
+2. Удалите старый контейнер `angelplanner-studio` (если остался) — Studio теперь внутри bot
+3. Логи `angelplanner-bot` → `Starting Prisma Studio on 0.0.0.0:6666`
+4. Откройте http://`<IP-сервера>`:6666
 4. Таблица `User` → у родителя `role` = `ADMIN`
 5. Таблица `ParentChild` — привязка родитель ↔ ребёнок (или через бот: `⚙️ Адмін` → `👨‍👧 Мої діти`)
 
 **Если 6666 недоступен:**
 
-- Portainer → Stack → **Update the stack** (вставьте актуальный `docker-compose.portainer.yml`) → **Pull and redeploy**
-- Studio использует `network_mode: host` — порт 6666 открывается прямо на сервере (Linux)
-- Проверьте, что `angelplanner-studio` в статусе **running**, не **restarting**
-- На сервере по SSH:
-  ```bash
-  docker logs angelplanner-studio --tail 30
-  curl -I http://127.0.0.1:6666
-  ss -tlnp | grep 6666
-  ```
-- Firewall: `sudo ufw allow 6666/tcp` или откройте порт в iptables
-- Если `curl` на сервере работает, а с ПК нет → сеть/firewall между 10.10.20.22 и вашим ПК
+- Дождитесь сборки нового образа в GitHub Actions, затем **Pull and redeploy**
+- В Portainer у `angelplanner-bot` должно быть **Published Ports: 6666→6666**
+- Удалите отдельный контейнер `angelplanner-studio` если он ещё есть
+- На сервере: `docker logs angelplanner-bot --tail 30` и `curl -I http://127.0.0.1:6666`
 
 ### 5. Обновление
 

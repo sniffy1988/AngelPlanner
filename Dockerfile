@@ -15,11 +15,12 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/assets ./assets
-COPY scripts/start-studio.sh ./scripts/start-studio.sh
+COPY scripts/start-prod.sh ./scripts/start-prod.sh
 COPY package.json ./
 ENV NODE_ENV=production TZ=Europe/Kyiv
-RUN chmod +x /app/scripts/start-studio.sh
+RUN chmod +x /app/scripts/start-prod.sh
 RUN mkdir -p /app/data
 VOLUME ["/app/data"]
-ENV DATABASE_URL="file:/app/data/angelplanner.db"
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/index.js"]
+ENV DATABASE_URL="file:/app/data/angelplanner.db?connection_limit=1&socket_timeout=30"
+EXPOSE 6666
+CMD ["sh", "/app/scripts/start-prod.sh"]
