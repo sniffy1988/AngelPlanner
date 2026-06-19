@@ -11,6 +11,7 @@ import {
 import * as taskService from '../../services/taskService';
 import * as rewardService from '../../services/rewardService';
 import * as pointsService from '../../services/pointsService';
+import * as adminNotify from '../../services/adminNotifyService';
 import { adminMenuKeyboard } from '../keyboards/adminMenu';
 import {
   childrenFilterKeyboard,
@@ -404,6 +405,18 @@ export function registerAdminHandlers(bot: Telegraf<BotContext>) {
       weekDays,
       remindBeforeMinutes: w.remindBeforeMinutes ?? null,
     });
+
+    const parent = ctx.state.user!;
+    const child = (await myChildren(ctx)).find((c) => c.id === w.assigneeId);
+    await adminNotify.taskCreated(
+      bot,
+      w.assigneeId,
+      parent.id,
+      parent.name ?? 'Parent',
+      child?.name ?? t('app.child_name', locale),
+      w.title,
+      w.points
+    );
 
     ctx.session.wizard = {};
     await ctx.answerCbQuery();

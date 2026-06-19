@@ -64,5 +64,43 @@ export async function listUnlinkedChildrenForParent(parentId: number) {
 
 export async function listParentTelegramIdsForChild(childId: number) {
   const parents = await listParentsForChild(childId);
-  return parents.map((p) => ({ telegramId: p.telegramId, locale: p.locale }));
+  return parents.map((p) => ({
+    userId: p.id,
+    telegramId: p.telegramId,
+    locale: p.locale,
+    name: p.name,
+  }));
+}
+
+export type FamilyMember = {
+  userId: number;
+  telegramId: bigint;
+  locale: import('@prisma/client').Locale;
+  name: string | null;
+};
+
+export async function listFamilyMembers(childId: number): Promise<FamilyMember[]> {
+  const child = await prisma.user.findUnique({ where: { id: childId } });
+  if (!child) return [];
+
+  const parents = await listParentsForChild(childId);
+  const members: FamilyMember[] = [
+    {
+      userId: child.id,
+      telegramId: child.telegramId,
+      locale: child.locale,
+      name: child.name,
+    },
+  ];
+
+  for (const parent of parents) {
+    members.push({
+      userId: parent.id,
+      telegramId: parent.telegramId,
+      locale: parent.locale,
+      name: parent.name,
+    });
+  }
+
+  return members;
 }
