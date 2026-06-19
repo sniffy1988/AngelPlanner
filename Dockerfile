@@ -1,5 +1,5 @@
 # stage 1: build
-FROM node:22-bookworm-slim AS builder
+FROM node:24-bookworm-slim AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
@@ -8,7 +8,7 @@ COPY . .
 RUN npx prisma generate && npm run build
 
 # stage 2: production
-FROM node:22-bookworm-slim AS runner
+FROM node:24-bookworm-slim AS runner
 WORKDIR /app
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/dist ./dist
