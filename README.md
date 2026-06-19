@@ -122,12 +122,12 @@ Image: `ghcr.io/sniffy1988/angelplanner:latest` (multi-arch: amd64 + arm64).
 
 ### 4. Prisma Studio (порт 6666)
 
-Один контейнер `app`: бот + Studio. Порт **6666** публикуется в `mode: host`.
+Один контейнер `angelplanner` (бот + Studio). Порт `6666:6666`.
 
-1. Удалите старые контейнеры `angelplanner-bot`, `angelplanner-studio`, `angelplanner-app`
+1. Удалите старые контейнеры `angelplanner-*`
 2. **Stacks** → Update stack → вставьте `docker-compose.portainer.yml`
-3. При создании стека выберите **Docker Compose** (не Swarm)
-4. Дождитесь новый образ из GitHub Actions → **Pull and redeploy**
+3. **Pull and redeploy** (после сборки образа в GitHub Actions)
+4. В Portainer у контейнера должно быть **Published Ports: 6666→6666**
 5. Откройте http://`10.10.20.22`:6666
 
 **Проверка на сервере (SSH):**

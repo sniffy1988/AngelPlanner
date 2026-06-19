@@ -1,13 +1,11 @@
-# Portainer Stack
+# Portainer Stack (Docker Compose)
 # Prisma Studio: http://<IP-сервера>:6666
 # BOT_TOKEN — в Environment variables стека
-#
-# Важно: при создании стека выберите "Docker Compose" (не Swarm),
-# либо используйте ports mode: host ниже.
 
 services:
   app:
     image: ghcr.io/sniffy1988/angelplanner:latest
+    container_name: angelplanner
     restart: unless-stopped
     environment:
       BOT_TOKEN: ${BOT_TOKEN}
@@ -16,10 +14,7 @@ services:
       DEFAULT_LOCALE: ua
       BROWSER: none
     ports:
-      - target: 6666
-        published: 6666
-        protocol: tcp
-        mode: host
+      - "6666:6666"
     volumes:
       - angelplanner-data:/app/data
 
